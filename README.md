@@ -4,6 +4,10 @@ LiDAR가 놓치는 물체(검은 흡수체, 얇은 물체, 바닥 소형 물체)
 
 > 진행 중인 팀 프로젝트입니다. 결과는 평가가 끝난 뒤 채웁니다.
 
+- 센서: RPLIDAR C1 (2D LiDAR), USB 웹캠
+- 연산: Jetson Orin Nano Super, ROS2 Humble (Ubuntu 22.04, Python 3.10)
+- 평가: LiDAR 단독 / 카메라 단독 / 융합의 검출률을 같은 rosbag으로 비교
+
 ## 구성
 
 | 폴더 | 내용 | 담당 |
