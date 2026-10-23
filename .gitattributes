@@ -1,0 +1,7 @@
+# Normalize line endings to LF (files edited on Windows still work on Ubuntu/Jetson)
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.pdf binary
