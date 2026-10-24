@@ -1,4 +1,6 @@
-# LiDAR Blind Spot: LiDAR가 놓치는 물체를 찾는 Jetson 엣지 AI
+# LiDAR Blind Spot
+
+**카메라 · LiDAR 융합으로 LiDAR 사각지대 물체를 찾는 Jetson 엣지 AI**
 
 LiDAR가 놓치는 물체(검은 흡수체, 얇은 물체, 바닥 소형 물체)를 카메라 객체 검출로 찾고, 두 센서를 융합해 통과 / 감속 / 정지 판단(`/safety_advice`)을 내보내는 Jetson Orin Nano 기반 엣지 AI 시스템입니다.
 
