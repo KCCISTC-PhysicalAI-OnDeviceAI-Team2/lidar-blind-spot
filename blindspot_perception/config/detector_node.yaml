@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    model_path: ~/models/yolo11n.pt
+    conf_threshold: 0.25
+    imgsz: 640
