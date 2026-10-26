@@ -14,7 +14,7 @@ venv/
 # ===== Jupyter =====
 .ipynb_checkpoints/
 
-# ===== Models and weights (keep in shared folder / Jetson ~/models/) =====
+# ===== Models and weights =====
 *.pt
 *.pth
 *.onnx
@@ -27,13 +27,13 @@ venv/
 runs/
 datasets/
 
-# ===== rosbag (keep in shared folder 02_rosbag/) =====
+# ===== rosbag =====
 *.db3
 *.mcap
 bags/
 rosbag*/
 
-# ===== Images, video, datasets (keep in shared folder 01_데이터/) =====
+# ===== Images, video, datasets =====
 *.jpg
 *.jpeg
 *.png
