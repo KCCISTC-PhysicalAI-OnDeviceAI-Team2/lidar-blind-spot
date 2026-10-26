@@ -159,7 +159,7 @@ ros2 bag play ~/bags/<rosbag 이름>
 
 **융합 규칙 (`fusion_node`):**
 1. LiDAR와 카메라 각각 **가장 최근 메시지**를 보관한다. 아직 한 번도 받지 않은 쪽은 판단에서 빼고 `reason`에 `camera none`처럼 남긴다.
-2. 한쪽 메시지가 다른 쪽보다 0.5초 넘게 오래됐으면(`stale_sec`, `header.stamp`끼리 비교) 그쪽은 이번 판단에서 빼고 `reason`에 `camera stale`처럼 남긴다. 컴퓨터 시계가 아니라 메시지 시각끼리 비교하므로 rosbag 재생에서도 똑같이 동작한다.
+2. 한쪽 메시지가 다른 쪽보다 0.5초 이상 오래됐으면(`stale_sec`, `header.stamp`끼리 비교) 그쪽은 이번 판단에서 빼고 `reason`에 `camera stale`처럼 남긴다. 컴퓨터 시계가 아니라 메시지 시각끼리 비교하므로 rosbag 재생에서도 똑같이 동작한다.
 3. 카메라 장애물은 `confidence`가 기준값(`min_confidence`) 이상인 것만 쓴다.
 4. 각 장애물이 어느 구역에 있는지 보고, **가장 위험한 판단**(STOP > SLOW > PASS)을 고른다. LiDAR와 카메라는 OR(둘 중 하나라도 구역 안이면 그 판단).
 5. `lidar_hit`, `camera_hit`, 판단에 쓴 메시지의 `lidar_stamp`, `camera_stamp`를 채워 발행한다.

@@ -1,0 +1,7 @@
+/**:
+  ros__parameters:
+    stop_x: 1.5          # 정지 구역 끝 [m]
+    slow_x: 2.5          # 감속 구역 끝 [m]
+    half_width: 1.2      # 구역 폭의 절반 [m]
+    stale_sec: 0.5       # 소스 간 시각 차이 허용 한계 [s]
+    min_confidence: 0.5  # 카메라 장애물 최소 신뢰도 (초기값, 학습 뒤 조정)
