@@ -52,8 +52,8 @@
 **카메라 — `v4l2_camera` 패키지 사용** (설정 값은 모델 담당, launch는 통합 담당)
 - 직접 노드를 만들지 않고 `ros-humble-v4l2-camera`를 쓴다. 압축 이미지 플러그인이 설치돼 있으면 `/camera/image_raw/compressed`도 함께 발행된다.
 - **네임스페이스 `camera`로 실행한다**(launch에서 `namespace='camera'`, 명령으로는 `--ros-args -r __ns:=/camera`). 그러면 `/camera/image_raw`, `/camera/image_raw/compressed`, `/camera/camera_info`가 발행된다. 토픽 이름을 바꾸는 remap은 압축 토픽이 따라오지 않을 수 있어 쓰지 않는다.
-- 설정: `video_device: /dev/video0`, `image_size: [640, 480]`. 웹캠이 지원하는 해상도는 `v4l2-ctl --list-formats-ext`로 확인한다.
-- 웹캠이 `v4l2_camera`와 맞지 않으면 `usb_cam`이나 직접 만든 노드로 바꾼다. 토픽 이름과 메시지는 그대로 둔다.
+ 설정: `video_device: /dev/video0`, `pixel_format: YUYV`, `image_size: [640, 480]`. 실측 주기 약 13Hz(웹캠의 YUYV 한계, USB 2.0 연결). 웹캠이 지원하는 해상도는 `v4l2-ctl --list-formats-ext`로 확인한다.
+- 이 웹캠은 MJPG로 30fps가 나오지만, `v4l2_camera`가 MJPG를 지원하지 않아 쓰지 않는다. 30fps가 필요해지면 `usb_cam`으로 바꾼다(토픽 이름과 메시지는 그대로).
 
 **추론 `detector_node`**
 - 입력 `/camera/image_raw` → 출력 `/detections`. 입력은 깊이 1로 구독해 밀린 영상은 버린다(지연이 쌓이지 않게).
