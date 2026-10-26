@@ -2,6 +2,8 @@
 
 from blindspot_fusion import zone
 
+LEVEL_NAMES = {zone.PASS: 'PASS', zone.SLOW: 'SLOW', zone.STOP: 'STOP'}
+
 
 def select_sources(lidar_time, camera_time, stale_sec):
     """
@@ -65,3 +67,20 @@ def decide(obstacles, stop_x, slow_x, half_width, min_confidence):
             worst = obs
 
     return level, lidar_hit, camera_hit, worst
+
+
+def make_reason(level, worst, notes):
+    """
+    SafetyAdvice.reason에 넣을 설명 문장을 만든다.
+
+    예: 'camera:box x=1.00 y=0.20 -> STOP', 'no obstacle -> PASS; camera stale'
+    """
+    name = LEVEL_NAMES[level]
+    if worst is None:
+        text = f'no obstacle -> {name}'
+    else:
+        text = f'{worst.source}:{worst.label} x={worst.x:.2f} y={worst.y:.2f} -> {name}'
+
+    if notes:
+        text += '; ' + ', '.join(notes)
+    return text

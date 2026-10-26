@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import pytest
 
-from blindspot_fusion.fusion_logic import decide, select_sources
+from blindspot_fusion.fusion_logic import decide, make_reason, select_sources
 
 STALE_SEC = 0.5
 
@@ -55,3 +55,17 @@ BEHIND = Obs('unknown', -0.5, 0.0, 1.0, 'lidar')
 )
 def test_decide(obstacles, expected):
     assert decide(obstacles, STOP_X, SLOW_X, HALF_WIDTH, MIN_CONF) == expected
+
+
+@pytest.mark.parametrize(
+    'level, worst, notes, expected',
+    [
+        (2, CAM_STOP, [], 'camera:box x=1.00 y=0.20 -> STOP'),
+        (1, LIDAR_SLOW, [], 'lidar:unknown x=2.00 y=0.00 -> SLOW'),
+        (0, None, [], 'no obstacle -> PASS'),
+        (0, None, ['camera stale'], 'no obstacle -> PASS; camera stale'),
+        (2, LIDAR_STOP, ['camera none'], 'lidar:unknown x=1.00 y=0.00 -> STOP; camera none'),
+    ],
+)
+def test_make_reason(level, worst, notes, expected):
+    assert make_reason(level, worst, notes) == expected
