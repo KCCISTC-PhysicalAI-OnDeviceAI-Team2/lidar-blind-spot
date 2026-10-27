@@ -10,7 +10,7 @@ def select_sources(lidar_time, camera_time, stale_sec):
     판단에 쓸 소스(LiDAR, 카메라)를 고른다.
 
     lidar_time, camera_time: 각 소스의 가장 최근 메시지 시각 [s]. 받은 적 없으면 None.
-    stale_sec: 두 소스의 메시지 시각 차이가 이 값[s]보다 크면 더 오래된 쪽을 판단에서 뺀다.
+    stale_sec: 두 소스의 메시지 시각 차이가 이 값[s] 이상이면 더 오래된 쪽을 판단에서 뺀다.
 
     반환값: (use_lidar, use_camera, notes). notes는 reason에 붙일 문자열 목록.
     """
