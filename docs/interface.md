@@ -186,7 +186,7 @@ ros2 bag play ~/bags/<rosbag 이름>
 
 **평가 실행 순서** (Jetson에서 실행하고, 사용한 모델의 이름과 형식을 결과표에 적는다):
 1. republish와 노드 전체(카메라 · LiDAR 드라이버 제외)를 켠다.
-2. `ros2 bag record -o ~/bags/<rosbag 이름>_out /lidar_obstacles /camera_obstacles /safety_advice`
+2. `ros2 bag record -o ~/bags/<rosbag 이름>_out /lidar_obstacles /camera_obstacles /safety_advice`로 녹화를 켜고 2~3초 기다린다. 바로 재생하면 녹화가 토픽을 늦게 구독해 앞부분 메시지가 빠질 수 있다.
 3. `ros2 bag play ~/bags/<rosbag 이름>`
 4. 재생이 끝나면 녹화를 멈춘다(Ctrl+C).
 5. `eval/` 스크립트가 `_out` rosbag과 조건표로 평가 결과 CSV를 만든다.
@@ -201,6 +201,7 @@ ros2 bag play ~/bags/<rosbag 이름>
 | 지연 | 실시간 실행의 결과 토픽 | 받은 시각 − `header.stamp`의 평균과 최대. 같은 Jetson 안에서 잰다 |
 
 - 비율로 비교하므로 토픽마다 발행 주기가 달라도 된다. 메시지 수도 함께 적는다.
+- 융합 판단 중 rosbag에 녹화되지 않은 입력 메시지를 가리키는 것은 검출 여부를 확인할 수 없으므로 빼고 센다. 뺀 수는 평가 스크립트가 조건마다 출력한다.
 - rosbag 재생 중에는 `header.stamp`가 녹화 당시 시각이라 지연 계산에 쓰지 않는다.
 
 ### 검출 반경 정하는 법 (초기값 0.2m)
