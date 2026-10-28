@@ -1,5 +1,7 @@
 """센서 지그의 LiDAR, 카메라, 고정 좌표 변환을 켠다."""
 
+import math
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
@@ -8,10 +10,12 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-# base_jig 기준 센서 위치 [m]와 각도 [rad].
-# 지그에서 잰 값으로 바꾼다. 지금은 임시 값 0.
-LASER_TF = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0}
-CAMERA_TF = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0}
+# base_jig 기준 센서 위치 [m]와 각도 [도 → rad]. 지그에서 잰 값.
+# LiDAR는 정면이 지그 정면을 향하게 놓아 yaw = 0.
+LASER_TF = {'x': 0.0, 'y': 0.0, 'z': 0.127,
+            'yaw': math.radians(0.0), 'pitch': 0.0, 'roll': 0.0}
+CAMERA_TF = {'x': 0.04, 'y': 0.01, 'z': 0.40,
+             'yaw': 0.0, 'pitch': math.radians(17.0), 'roll': 0.0}
 
 
 def static_tf(child, tf):
