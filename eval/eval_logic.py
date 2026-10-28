@@ -32,3 +32,15 @@ def summarize(results, expected_level):
         '기대판단_일치_수': sum(1 for _, lv in results if lv == expected_level),
         'STOP_수': sum(1 for _, lv in results if lv == STOP),
     }
+
+
+def from_start(messages, start):
+    """start(sec, nanosec) 이후에 찍힌 메시지만 남긴다.
+
+    녹화 앞부분처럼 두 센서가 다 들어오기 전 메시지를 세지 않을 때 쓴다.
+    """
+    kept = []
+    for m in messages:
+        if (m.header.stamp.sec, m.header.stamp.nanosec) >= start:
+            kept.append(m)
+    return kept

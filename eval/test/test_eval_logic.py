@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from eval.eval_logic import is_detected, summarize
+from eval.eval_logic import from_start, is_detected, summarize
 
 TRUTH = (1.00, 0.00)
 RADIUS = 0.2
@@ -47,3 +47,15 @@ def test_summarize_empty_scene():
     assert row['검출률'] == ''
     assert row['기대판단_일치_수'] == 1
     assert row['STOP_수'] == 1
+
+
+def msg(sec, nanosec):
+    """테스트용 메시지(.header.stamp만 있으면 된다)."""
+    return SimpleNamespace(header=SimpleNamespace(stamp=SimpleNamespace(sec=sec, nanosec=nanosec)))
+
+
+def test_from_start():
+    """시작 시각과 같거나 늦은 메시지만 남는다(초가 같으면 나노초로 비교)."""
+    messages = [msg(10, 0), msg(12, 400), msg(12, 500), msg(13, 0)]
+    kept = from_start(messages, (12, 500))
+    assert [(m.header.stamp.sec, m.header.stamp.nanosec) for m in kept] == [(12, 500), (13, 0)]
