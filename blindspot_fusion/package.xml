@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>blindspot_fusion</name>
+  <version>0.0.0</version>
+  <description>Fuse LiDAR and camera obstacles into stop, slow or pass advice</description>
+  <maintainer email="dev.immme@gmail.com">Minseok Lee</maintainer>
+  <license>AGPL-3.0-only</license>
+
+  <depend>rclpy</depend>
+  <depend>blindspot_msgs</depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
