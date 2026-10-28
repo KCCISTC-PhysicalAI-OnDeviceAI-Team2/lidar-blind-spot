@@ -15,7 +15,7 @@ import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
 import yaml
 
-from eval_logic import is_detected, summarize
+from eval_logic import from_start, is_detected, summarize
 
 LEVELS = {'PASS': 0, 'SLOW': 1, 'STOP': 2}
 TOPICS = {'lidar': '/lidar_obstacles', 'camera': '/camera_obstacles', 'fusion': '/safety_advice'}
@@ -51,10 +51,23 @@ def stamp_key(stamp):
     return (stamp.sec, stamp.nanosec)
 
 
+def start_time(msgs):
+    """두 장애물 토픽이 모두 들어오기 시작한 시각(sec, nanosec).
+
+    녹화 앞부분에는 카메라가 아직 없을 수 있어(녹화가 토픽을 늦게 구독함) 이 시각부터 센다.
+    """
+    firsts = []
+    for method in ('lidar', 'camera'):
+        ms = msgs.get(TOPICS[method], [])
+        if ms:
+            firsts.append(stamp_key(ms[0].header.stamp))
+    return max(firsts, default=(0, 0))
+
+
 def evaluate_condition(row, msgs, zone, radius):
     """조건 하나의 결과를 방식(lidar, camera, fusion)별로 센다.
 
-    반환값: ([(방식, summarize 결과), ...], fusion에서 뺀 판단 수)
+    반환값: ([(방식, summarize 결과), ...], 없는 입력이라 뺀 판단 수, 시작 전이라 뺀 판단 수)
     """
     expected = LEVELS[row['기대_판단']]
     truth = None
@@ -67,10 +80,11 @@ def evaluate_condition(row, msgs, zone, radius):
             return None
         return is_detected(usable_obstacles(obstacles, zone['min_confidence']), *truth, radius)
 
+    start = start_time(msgs)
     rows = []
     for method in ('lidar', 'camera'):
         results = []
-        for m in msgs.get(TOPICS[method], []):
+        for m in from_start(msgs.get(TOPICS[method], []), start):
             level = decide(m.obstacles, zone['stop_x'], zone['slow_x'],
                            zone['half_width'], zone['min_confidence'])[0]
             results.append((detect(m.obstacles), level))
@@ -78,8 +92,11 @@ def evaluate_condition(row, msgs, zone, radius):
 
     lidar_by = {stamp_key(m.header.stamp): m for m in msgs.get(TOPICS['lidar'], [])}
     camera_by = {stamp_key(m.header.stamp): m for m in msgs.get(TOPICS['camera'], [])}
+    advices = msgs.get(TOPICS['fusion'], [])
+    counted = from_start(advices, start)
+    early = len(advices) - len(counted)
     results, skipped = [], 0
-    for adv in msgs.get(TOPICS['fusion'], []):
+    for adv in counted:
         used, missing = [], False
         for key, table in ((stamp_key(adv.lidar_stamp), lidar_by),
                            (stamp_key(adv.camera_stamp), camera_by)):
@@ -94,7 +111,7 @@ def evaluate_condition(row, msgs, zone, radius):
             continue
         results.append((detect(used), adv.level))
     rows.append(('fusion', summarize(results, expected)))
-    return rows, skipped
+    return rows, skipped, early
 
 
 def main():
@@ -113,13 +130,14 @@ def main():
     out_rows = []
     for row in conditions:
         bag = Path(args.bags).expanduser() / f"{row['rosbag']}_out"
-        rows, skipped = evaluate_condition(row, read_bag(bag), zone, args.radius)
+        rows, skipped, early = evaluate_condition(row, read_bag(bag), zone, args.radius)
         for method, s in rows:
             rate = s['검출률']
             out_rows.append({'조건번호': row['조건번호'], '방식': method, **s,
                              '검출률': '' if rate == '' else f'{rate:.3f}',
                              '평균_지연_ms': '', '최대_지연_ms': ''})
-        print(f"{row['조건번호']} fusion: rosbag에 없는 입력을 가리켜 뺀 판단 {skipped}개")
+        print(f"{row['조건번호']} fusion: 두 센서가 다 들어오기 전 판단 {early}개, "
+              f"rosbag에 없는 입력을 가리킨 판단 {skipped}개를 뺌")
 
     out = Path(args.out).expanduser()
     with open(out, 'w', encoding='utf-8', newline='') as f:
