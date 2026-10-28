@@ -106,7 +106,7 @@ bool  lidar_hit                       # a LiDAR obstacle was inside the zone
 bool  camera_hit                      # a camera obstacle was inside the zone
 builtin_interfaces/Time lidar_stamp   # stamp of the LiDAR message used (0 if not used)
 builtin_interfaces/Time camera_stamp  # stamp of the camera message used (0 if not used)
-string reason                         # e.g. "camera:black x=1.02 y=0.01 -> STOP"
+string reason                         # e.g. "camera:box x=1.02 y=0.01 -> STOP"
 ```
 
 - **장애물이 없어도 빈 배열을 발행한다.** 그래야 "못 찾음"과 "노드가 멈춤"을 구분하고, 검출률 분모를 셀 수 있다.
@@ -215,7 +215,7 @@ ros2 bag play ~/bags/<rosbag 이름>
 
 ## 8. 파일 형식
 
-- **rosbag 이름:** `YYYYMMDD_조건번호_물체_거리_각도`. 예: `YYYYMMDD_c03_black_1m0_20deg`, 빈 장면은 `YYYYMMDD_c00_empty`. 평가 출력은 이름 뒤에 `_out`.
+- **rosbag 이름:** `YYYYMMDD_조건번호_물체_거리_각도`. 예: `YYYYMMDD_c03_clear_cup_1m0_20deg`, 빈 장면은 `YYYYMMDD_c00_empty`. 평가 출력은 이름 뒤에 `_out`.
 - **조건표(CSV):** `조건번호, 물체, 클래스, 거리_m, 각도_deg, 정답_x_m, 정답_y_m, 조명, 기대_판단, rosbag, 메모`
 - **평가 결과(CSV):** `조건번호, 방식(lidar/camera/fusion), 메시지_수, 검출_메시지_수, 검출률, 기대판단_일치_수, STOP_수, 평균_지연_ms, 최대_지연_ms`
 - **위치 오차(CSV, 반경 결정용):** `위치번호, 정답_x_m, 정답_y_m, 센서, 측정_x_m, 측정_y_m, 오차_m`
