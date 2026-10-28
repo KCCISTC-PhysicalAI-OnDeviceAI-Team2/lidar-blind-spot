@@ -34,6 +34,16 @@ def select_sources(lidar_time, camera_time, stale_sec):
     return use_lidar, use_camera, notes
 
 
+def usable_obstacles(obstacles, min_confidence):
+    """판단에 쓸 장애물만 남긴다. 카메라 장애물은 신뢰도가 기준 이상일 때만 쓴다."""
+    usable = []
+    for o in obstacles:
+        if o.source == 'camera' and o.confidence < min_confidence:
+            continue
+        usable.append(o)
+    return usable
+
+
 def decide(obstacles, stop_x, slow_x, half_width, min_confidence):
     """
     장애물 목록에서 가장 위험한 판단을 고른다.
@@ -50,9 +60,7 @@ def decide(obstacles, stop_x, slow_x, half_width, min_confidence):
     camera_hit = False
     worst = None
 
-    for obs in obstacles:
-        if obs.source == 'camera' and obs.confidence < min_confidence:
-            continue
+    for obs in usable_obstacles(obstacles, min_confidence):
         obs_level = zone.classify_zone(obs.x, obs.y, stop_x, slow_x, half_width)
         if obs_level == zone.PASS:
             continue

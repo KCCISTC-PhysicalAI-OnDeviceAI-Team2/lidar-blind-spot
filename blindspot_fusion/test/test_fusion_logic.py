@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import pytest
 
-from blindspot_fusion.fusion_logic import decide, make_reason, select_sources
+from blindspot_fusion.fusion_logic import decide, make_reason, select_sources, usable_obstacles
 
 STALE_SEC = 0.5
 
@@ -69,3 +69,21 @@ def test_decide(obstacles, expected):
 )
 def test_make_reason(level, worst, notes, expected):
     assert make_reason(level, worst, notes) == expected
+
+
+@pytest.mark.parametrize(
+    'confidence, source, kept',
+    [
+        (0.8, 'camera', True),    # 기준 이상
+        (0.5, 'camera', True),    # 딱 기준값도 남김
+        (0.4, 'camera', False),   # 기준 미만은 뺌
+        (0.3, 'lidar', True),     # LiDAR는 거르지 않음
+    ],
+)
+def test_usable_obstacles(confidence, source, kept):
+    obs = Obs(label='box', x=1.0, y=0.0, confidence=confidence, source=source)
+    assert (obs in usable_obstacles([obs], MIN_CONF)) == kept
+
+
+def test_usable_obstacles_empty():
+    assert usable_obstacles([], MIN_CONF) == []

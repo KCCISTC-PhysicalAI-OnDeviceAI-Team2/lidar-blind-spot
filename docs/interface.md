@@ -106,7 +106,7 @@ bool  lidar_hit                       # a LiDAR obstacle was inside the zone
 bool  camera_hit                      # a camera obstacle was inside the zone
 builtin_interfaces/Time lidar_stamp   # stamp of the LiDAR message used (0 if not used)
 builtin_interfaces/Time camera_stamp  # stamp of the camera message used (0 if not used)
-string reason                         # e.g. "camera:black x=1.02 y=0.01 -> STOP"
+string reason                         # e.g. "camera:box x=1.02 y=0.01 -> STOP"
 ```
 
 - **장애물이 없어도 빈 배열을 발행한다.** 그래야 "못 찾음"과 "노드가 멈춤"을 구분하고, 검출률 분모를 셀 수 있다.
@@ -121,6 +121,8 @@ string reason                         # e.g. "camera:black x=1.02 y=0.01 -> STOP
 mkdir -p ~/bags
 ros2 bag record -o ~/bags/<rosbag 이름> /scan /camera/image_raw/compressed /tf_static
 ```
+
+**녹화 시간:** 녹화를 켜면 토픽을 구독하는 데 시간이 걸려 앞부분에 카메라 메시지가 없을 수 있다(샘플에서 약 2.5초). 평가 rosbag은 13초 녹화해 그만큼 빼도 10초 이상 남게 한다(`blindspot_bringup/scripts/record_bag.sh <이름>`, 기본 13초).
 
 **재생할 때 주의:** rosbag에는 압축 영상만 들어 있어서, 그대로 재생하면 `/camera/image_raw`를 구독하는 노드(추론, 시각화)는 영상을 받지 못한다. 압축을 풀어 `/camera/image_raw`로 다시 내보내는 노드를 **재생보다 먼저** 켠다. 구독하는 노드도 재생보다 먼저 켠다(`/tf_static`은 재생 시작 때 한 번만 나오므로).
 
@@ -186,7 +188,7 @@ ros2 bag play ~/bags/<rosbag 이름>
 
 **평가 실행 순서** (Jetson에서 실행하고, 사용한 모델의 이름과 형식을 결과표에 적는다):
 1. republish와 노드 전체(카메라 · LiDAR 드라이버 제외)를 켠다.
-2. `ros2 bag record -o ~/bags/<rosbag 이름>_out /lidar_obstacles /camera_obstacles /safety_advice`
+2. `ros2 bag record -o ~/bags/<rosbag 이름>_out /lidar_obstacles /camera_obstacles /safety_advice`로 녹화를 켜고 2~3초 기다린다. 바로 재생하면 녹화가 토픽을 늦게 구독해 앞부분 메시지가 빠질 수 있다.
 3. `ros2 bag play ~/bags/<rosbag 이름>`
 4. 재생이 끝나면 녹화를 멈춘다(Ctrl+C).
 5. `eval/` 스크립트가 `_out` rosbag과 조건표로 평가 결과 CSV를 만든다.
@@ -201,6 +203,8 @@ ros2 bag play ~/bags/<rosbag 이름>
 | 지연 | 실시간 실행의 결과 토픽 | 받은 시각 − `header.stamp`의 평균과 최대. 같은 Jetson 안에서 잰다 |
 
 - 비율로 비교하므로 토픽마다 발행 주기가 달라도 된다. 메시지 수도 함께 적는다.
+- 융합 판단 중 rosbag에 녹화되지 않은 입력 메시지를 가리키는 것은 검출 여부를 확인할 수 없으므로 빼고 센다. 뺀 수는 평가 스크립트가 조건마다 출력한다.
+- 세 방식 모두 두 장애물 토픽(`/lidar_obstacles`, `/camera_obstacles`)의 첫 메시지 시각 중 늦은 쪽부터 센다. 카메라가 아직 없는 녹화 앞부분에 LiDAR만으로 낸 판단을 세지 않고, 세 방식을 같은 구간으로 비교한다. 이렇게 뺀 판단 수도 조건마다 출력한다.
 - rosbag 재생 중에는 `header.stamp`가 녹화 당시 시각이라 지연 계산에 쓰지 않는다.
 
 ### 검출 반경 정하는 법 (초기값 0.2m)
@@ -214,7 +218,7 @@ ros2 bag play ~/bags/<rosbag 이름>
 
 ## 8. 파일 형식
 
-- **rosbag 이름:** `YYYYMMDD_조건번호_물체_거리_각도`. 예: `YYYYMMDD_c03_black_1m0_20deg`, 빈 장면은 `YYYYMMDD_c00_empty`. 평가 출력은 이름 뒤에 `_out`.
+- **rosbag 이름:** `YYYYMMDD_조건번호_물체_거리_각도`. 예: `YYYYMMDD_c03_clear_cup_1m0_20deg`, 빈 장면은 `YYYYMMDD_c00_empty`. 평가 출력은 이름 뒤에 `_out`.
 - **조건표(CSV):** `조건번호, 물체, 클래스, 거리_m, 각도_deg, 정답_x_m, 정답_y_m, 조명, 기대_판단, rosbag, 메모`
 - **평가 결과(CSV):** `조건번호, 방식(lidar/camera/fusion), 메시지_수, 검출_메시지_수, 검출률, 기대판단_일치_수, STOP_수, 평균_지연_ms, 최대_지연_ms`
 - **위치 오차(CSV, 반경 결정용):** `위치번호, 정답_x_m, 정답_y_m, 센서, 측정_x_m, 측정_y_m, 오차_m`

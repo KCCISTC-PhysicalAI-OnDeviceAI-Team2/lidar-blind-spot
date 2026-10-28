@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    max_age_sec: 0.5
+    line_thickness: 2
+    font_scale: 0.6

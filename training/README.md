@@ -1,35 +1,78 @@
-# Training Data Capture
+# 학습 데이터 촬영 · 학습 가이드
 
-How we capture images for training the object detector.
+객체 검출 모델(YOLO)을 학습하기 위한 데이터 촬영, 정리, 학습 방법을 정리한 문서입니다.
 
-## Camera
+## 검출 대상 (3클래스)
 
-- Use the same webcam that is mounted on the sensor rig, connected to a laptop.
-- Record video at **640×480** (same as the robot-side camera topic).
-- Turn off video stabilization and HDR in the camera app. They crop or
-  change the image, so frames would differ from what the robot sees.
-- Keep the camera height and tilt close to the sensor rig setup.
+| 클래스 | 물체 | 라벨 기준 |
+| --- | --- | --- |
+| `box` | 상자 (눕힘 · 세움 모두) | 상자 전체. 같은 상자를 눕히거나 세워서 높이만 다른 조건을 만든다 |
+| `power_strip` | 멀티탭 | 본체만. 전선 · 플러그 · 반사 · 그림자는 넣지 않는다 |
+| `clear_cup` | 반투명 플라스틱 컵 | 컵 전체 |
 
-## Recording
+- 클래스 이름과 순서는 학습할 때 쓰는 `data.yaml`을 따른다. 학습 · 테스트 데이터가 같은 순서를 써야 한다.
+- 물체가 없는 빈 바닥 사진은 라벨 파일을 비워 둔다. 오검출(없는 물체를 잡는 것)을 줄이는 데 쓴다.
 
-- Objects: box (lying), box (standing), translucent plastic cup, power strip.
-- About 200 images per object, plus about 100 images of empty floor
-  (no objects, empty label files).
-- Distance: vary between about 1 m and 2.5 m.
-- Position in the image: mix left, center and right, including the sides
-  of the field of view.
-- Vary background and lighting across sessions.
-- Keep moving the object or the camera while recording, so that frames
-  are not near-duplicates.
-- Scenes recorded at the evaluation site must come from sessions that are
-  not used for evaluation.
+## 카메라
 
-## Frame extraction
+- 해상도는 **640×480**으로 맞춘다. 시스템의 카메라 토픽과 같은 해상도다.
+- 카메라 앱의 손떨림 보정과 HDR은 끈다. 화면을 잘라 내거나 색을 바꿔서 시스템 영상과 달라진다.
+- 카메라 높이와 기울기는 센서 지그와 비슷하게 둔다.
+- 세션마다 어떤 카메라로 찍었는지 기록한다.
 
-- Extract frames at a fixed **time** interval (e.g. every 0.5 s), not every
-  N frames. Camera apps often record with a variable frame rate.
-- Check that the extracted images are 640×480 before labeling.
+## 촬영
 
-## Data handling
+- 거리: 약 1m~2.5m 사이에서 다양하게 찍는다.
+- 화면 위치: 왼쪽 · 가운데 · 오른쪽을 섞고, 화면 가장자리도 포함한다.
+- 상자는 눕힌 것과 세운 것을 비슷한 비율로 섞는다.
+- 세션마다 배경과 조명을 바꾼다. 한 가지 배경(예: 어두운 바닥)에만 치우치면 다른 배경에서 성능이 크게 떨어진다.
+- 촬영하는 동안 물체나 카메라를 계속 움직인다. 거의 같은 사진만 쌓이지 않게 하기 위해서다.
+- 평가 장소에서 찍는 장면은 평가 녹화에 쓰지 않는 세션에서만 찍는다.
 
-- Videos and images are **not** committed to this repository.
+## 프레임 추출
+
+- 동영상에서 **일정한 시간 간격**(예: 0.5초)으로 뽑는다. 프레임 수 간격으로 뽑지 않는다. 카메라 앱 동영상은 프레임 간격이 일정하지 않은 경우가 많다.
+- 뽑은 이미지가 640×480인지 라벨링 전에 확인한다.
+
+## 파일 이름
+
+- 파일 이름은 **영어 · 숫자 · `_` · `-`만** 쓴다.
+  - 한글 이름은 Windows 기본 압축에서 깨질 수 있고, Windows의 OpenCV(`cv2.imread`)가 한글 경로를 열지 못한다.
+- 사진과 라벨 파일은 확장자만 다르고 이름이 같아야 한다.
+- 이름 속 번호는 촬영 순서대로 매긴다. 데이터를 나눌 때 이 순서를 쓴다.
+
+## 데이터 나누기
+
+| 구분 | 만드는 법 | 쓰는 곳 |
+| --- | --- | --- |
+| train / val | 클래스별로 파일 이름(번호) 순서대로 앞부분은 train, 뒷부분은 val (85/15) | 학습, epoch 선택, 모델 비교 |
+| test | 학습과 **다른 세션**으로 따로 촬영 | 확정한 모델을 마지막에 한 번만 평가 |
+
+- 무작위로 나누지 않는다. 연속 촬영한 거의 같은 사진이 train과 val에 흩어지면 val 점수가 실제보다 높게 나온다.
+- test 결과로 설정이나 모델을 고르지 않는다. 그 순간 test가 val이 되어 보고 점수가 부풀려진다.
+- 모델 비교는 val mAP50-95를 seed 여러 개로 평균 내서 한다. 데이터가 적어 seed만 바꿔도 점수가 흔들리기 때문이다.
+
+### 현재 데이터
+
+| 구분 | 내용 |
+| --- | --- |
+| 학습 (train + val) | 컵 67장, 상자 195장, 멀티탭 215장, 빈 바닥 125장 |
+| 테스트 | 133장, 박스 166개 (`box` 76, `power_strip` 42, `clear_cup` 48) |
+
+## 학습
+
+- Colab 노트북으로 학습한다(T4 GPU).
+- `ultralytics==8.4.183`로 고정한다. Jetson과 같은 버전이어야 모델 로드와 TensorRT 변환에서 버전 차이 문제가 없다.
+- 노트북은 출력을 모두 지운 상태로 올린다.
+
+## 알려진 한계와 추가 촬영 방향
+
+| 한계 | 추가 촬영 방향 |
+| --- | --- |
+| 밝은 배경에서 컵 · 상자를 잘 못 잡음 | 흰 바닥, 밝은 책상 같은 밝은 배경 세션 추가 |
+| 흰 직육면체를 멀티탭으로 잘못 잡음 | 우리 클래스가 아닌 흰 물체를 라벨 없는 사진으로 추가 |
+| 반사가 심한 바닥에서 물체의 반사까지 잡음 | 반사 바닥 장면을 찍고, 반사는 라벨하지 않음 |
+
+## 데이터 관리
+
+- 동영상, 사진, 라벨, 모델 파일은 이 저장소에 **올리지 않는다.**
