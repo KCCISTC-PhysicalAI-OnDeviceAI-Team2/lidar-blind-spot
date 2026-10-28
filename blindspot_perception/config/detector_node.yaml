@@ -1,5 +1,5 @@
 /**:
   ros__parameters:
-    model_path: ~/models/yolo11n.pt
+    model_path: ~/models/yolo11n_blindspot_v1.engine
     conf_threshold: 0.25
     imgsz: 640
