@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+install/
+log/
+*.png
+*.jpg
+*.mp4
+*.db3
+*.mcap
+backup/
+runs/
