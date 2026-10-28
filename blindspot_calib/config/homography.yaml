@@ -1,0 +1,15 @@
+# 영상 픽셀 (u, v) -> base_jig 바닥 (x, y) [m] 호모그래피. compute_homography가 만든다.
+# 원본: 20261028_052114, fit 점 7개 RMS 0.0085 m
+# validation_performed는 검증을 했다는 뜻이고 합격 판정이 아니다. 오차 값을 보고 판단한다.
+/**:
+  ros__parameters:
+    homography: [0.00011631489111419391, -0.003051750973579298, 5.915241078502432, -0.007899209221236237, 0.00011794008281185083, 2.5953910210902786, 0.00018225044578463619, 0.018483318340774605, 1.0]  # 3x3 행 우선
+    image_size: [640, 480]  # 계산에 쓴 영상 크기 [가로, 세로]
+    calibrated: true  # 격자로 계산함
+    provisional: true  # 현장 검증과 검토 전 임시 행렬
+    validation_performed: true  # check 점 3개 이상 + 실제 사진으로 독립 오차를 쟀음
+    check_points: 6
+    check_rms_m: 0.0308  # check 점 오차 RMS [m], 없으면 -1
+    check_max_m: 0.0592  # check 점 최대 오차 [m], 없으면 -1
+    loo_rms_m: 0.0278  # fit 점 하나씩 빼고 잰 추정 오차 RMS [m], 없으면 -1
+    loo_max_m: 0.0450  # 같은 방법의 최대 오차 [m], 없으면 -1
