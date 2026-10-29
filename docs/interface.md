@@ -62,7 +62,7 @@
 - 파라미터: `model_path`(Jetson에서는 `~/models/` 아래 파일 경로를 지정하고, 실행 중 자동 다운로드에 의존하지 않는다. 사전학습 모델은 `yolo11n.pt`, `yolo11s.pt`), `conf_threshold`(초기값 0.25). 클래스 이름은 학습 데이터의 라벨 이름과 같게 한다.
 
 **클러스터링 `lidar_cluster_node`**
-- 입력 `/scan` → 출력 `/lidar_obstacles`. `/scan` 한 번마다 한 번 발행한다(장애물이 없으면 빈 배열).
+- 입력 `/scan` → 출력 `/lidar_obstacles`. `/scan` 한 번마다 한 번 발행한다(장애물이 없으면 빈 배열). 단, `laser` → `base_jig` 변환을 받기 전에는 발행하지 않는다.
 - `laser` → `base_jig` 변환은 `/tf_static`에서 tf2로 받는다. 같은 값을 노드 파라미터에 따로 두지 않는다(값은 bringup launch 한 곳에만).
 - 점을 `base_jig` 바닥 좌표로 바꾸고, 가까운 점끼리 묶어(묶는 거리, 최소 점 수는 파라미터) 묶음 하나를 장애물 하나로 발행한다. 위치는 묶음 점들의 중심이다.
 - `label` = `"unknown"`, `confidence` = 1.0, `source` = `"lidar"`. `header.stamp` = `/scan`의 시각.
@@ -161,7 +161,7 @@ ros2 bag play ~/bags/<rosbag 이름>
 **융합 규칙 (`fusion_node`):**
 1. LiDAR와 카메라 각각 **가장 최근 메시지**를 보관한다. 아직 한 번도 받지 않은 쪽은 판단에서 빼고 `reason`에 `camera none`처럼 남긴다.
 2. 한쪽 메시지가 다른 쪽보다 0.5초 이상 오래됐으면(`stale_sec`, `header.stamp`끼리 비교) 그쪽은 이번 판단에서 빼고 `reason`에 `camera stale`처럼 남긴다. 컴퓨터 시계가 아니라 메시지 시각끼리 비교하므로 rosbag 재생에서도 똑같이 동작한다.
-3. 카메라 장애물은 `confidence`가 기준값(`min_confidence`) 이상인 것만 쓴다.
+3. 카메라 장애물은 `confidence`가 기준값(`min_confidence`, 0.5) 이상인 것만 쓴다. 이 값은 평가 녹화 전에 고정하고, 평가 결과를 보고 바꾸지 않는다.
 4. 각 장애물이 어느 구역에 있는지 보고, **가장 위험한 판단**(STOP > SLOW > PASS)을 고른다. LiDAR와 카메라는 OR(둘 중 하나라도 구역 안이면 그 판단).
 5. `lidar_hit`, `camera_hit`, 판단에 쓴 메시지의 `lidar_stamp`, `camera_stamp`를 채워 발행한다.
 
@@ -181,6 +181,7 @@ ros2 bag play ~/bags/<rosbag 이름>
 
 - **카메라 화각 확인:** 20° 방향 물체가 웹캠 화면 안에 충분히 들어오는지 평가 녹화 전에 확인한다.
 - **녹화 중 사람 위치:** 녹화하는 동안 사람은 지그 뒤(x < 0)에 머문다. 구역 안에 사람이 있으면 빈 장면도 STOP이 된다.
+- **녹화 직전 빈 장면 확인:** 물체를 놓기 전에 노드를 켜고 `ros2 topic echo --once /safety_advice --field reason`이 `no obstacle -> PASS`인지 본다. 지그의 케이블이 스캔 높이에 걸리면 지그 바로 앞(x 약 0.05m)이 장애물로 잡혀 STOP이 섞인다(2.0m 시험 rosbag에서 확인).
 
 ## 7. 평가 방법
 
