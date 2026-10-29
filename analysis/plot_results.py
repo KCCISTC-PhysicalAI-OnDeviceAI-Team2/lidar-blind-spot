@@ -69,6 +69,9 @@ def load(eval_path, cond_path):
 def condition_labels(rows, korean_ok):
     labels = []
     for _, r in rows.iterrows():
+        if r["is_empty"]:
+            labels.append("빈 장면" if korean_ok else f"{r['조건번호']} empty")
+            continue
         name = r["물체"] if korean_ok else f"{r['조건번호']} {r['클래스']}"
         labels.append(f"{name}\n{r['거리_m']:.1f} m, {int(r['각도_deg'])}°")
     return labels
@@ -84,12 +87,16 @@ def grouped_bar(df, value_col, title, ylabel, out_path, korean_ok):
     for i, m in enumerate(METHODS):
         sub = df[df["방식"] == m].set_index("조건번호")
         values = [sub[value_col].get(c, float("nan")) for c in cond_ids]
+        counts = [sub["메시지_수"].get(c, None) for c in cond_ids]
         xs = [x + (i - 1) * width for x in range(len(cond_ids))]
         ax.bar(xs, values, width, label=METHOD_LABELS[m], color=METHOD_COLORS[m])
+        for x, v, n in zip(xs, values, counts):
+            if n is not None and v == v:  # v == v is False for NaN
+                ax.text(x, v + 0.02, f"n={int(n)}", ha="center", fontsize=6, rotation=90)
 
     ax.set_xticks(range(len(cond_ids)))
     ax.set_xticklabels(labels, fontsize=8)
-    ax.set_ylim(0, 1.05)
+    ax.set_ylim(0, 1.25)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.legend(loc="upper right", fontsize=8)
@@ -106,9 +113,11 @@ def false_stop_bar(empty_df, out_path):
     values = [rates.get(m, float("nan")) for m in METHODS]
     bars = ax.bar([METHOD_LABELS[m] for m in METHODS], values,
                   color=[METHOD_COLORS[m] for m in METHODS])
-    ymax = max(0.1, max(values) * 1.3)
+    finite = [v for v in values if v == v]
+    ymax = max(0.1, max(finite, default=0) * 1.3)
     for b, v in zip(bars, values):
-        ax.text(b.get_x() + b.get_width() / 2, v + ymax * 0.02, f"{v:.1%}", ha="center", fontsize=9)
+        if v == v:
+            ax.text(b.get_x() + b.get_width() / 2, v + ymax * 0.02, f"{v:.1%}", ha="center", fontsize=9)
     ax.set_ylim(0, ymax)
     ax.set_ylabel("STOP share in empty scenes")
     ax.set_title("False stop rate (lower is better)")
