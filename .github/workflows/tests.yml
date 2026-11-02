@@ -1,0 +1,38 @@
+name: Unit tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Jetson의 ROS 2 Humble 환경과 같은 Python 3.10, numpy<2로 맞춘다
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install test dependencies
+        run: pip install "numpy<2" "opencv-python-headless<4.12" pytest
+
+      # ROS 없이 도는 로직 테스트만 실행한다. 코드 스타일 검사(flake8, pep257, copyright)는 ROS가 필요해 colcon test로 돌린다
+      - name: Fusion logic
+        working-directory: blindspot_fusion
+        run: python -m pytest -q test --ignore=test/test_copyright.py --ignore=test/test_flake8.py --ignore=test/test_pep257.py
+
+      - name: LiDAR clustering logic
+        working-directory: blindspot_lidar
+        run: python -m pytest -q test --ignore=test/test_copyright.py --ignore=test/test_flake8.py --ignore=test/test_pep257.py
+
+      - name: Camera-to-floor calibration logic
+        working-directory: blindspot_calib
+        run: python -m pytest -q test --ignore=test/test_copyright.py --ignore=test/test_flake8.py --ignore=test/test_pep257.py
+
+      - name: Evaluation logic
+        env:
+          PYTHONPATH: blindspot_fusion
+        run: python -m pytest -q eval/test
