@@ -24,7 +24,7 @@ def test_select_sources(lidar_time, camera_time, expected):
 
 STOP_X = 1.5
 SLOW_X = 2.5
-HALF_WIDTH = 1.2
+HALF_WIDTH = 0.7  # config/fusion_node.yaml의 half_width와 같은 값
 MIN_CONF = 0.5
 
 # blindspot_msgs/Obstacle과 같은 모양의 가짜 장애물
